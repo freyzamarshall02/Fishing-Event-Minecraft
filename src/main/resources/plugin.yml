@@ -1,0 +1,19 @@
+name: FishingEvent
+main: com.iwak.fishing.FishingEventPlugin
+version: 1.0.0
+api-version: "1.21"
+softdepend: [PlaceholderAPI]
+
+commands:
+  fishingstart:
+    description: Start a timed fishing competition
+    usage: /fishingstart <seconds>
+    permission: fishingevent.admin
+  fishingstop:
+    description: Stop the fishing competition
+    usage: /fishingstop
+    permission: fishingevent.admin
+
+permissions:
+  fishingevent.admin:
+    default: op

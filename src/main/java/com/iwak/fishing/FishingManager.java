@@ -1,168 +1,137 @@
 package com.iwak.fishing;
 
-import org.bukkit.*;
+import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class FishingManager {
 
-    public static class Stats {
-        public int fish = 0;
-        public int points = 0;
-    }
-
     private final FishingEventPlugin plugin;
-    private final Map<UUID, Stats> stats = new HashMap<>();
-    private final Map<Material, Integer> pointsTable = Map.of(
-            Material.COD, 1,
-            Material.SALMON, 2,
-            Material.PUFFERFISH, 3,
-            Material.TROPICAL_FISH, 5
-    );
-
-    private boolean running = false;
-    private long endEpochMs = 0L;
+    private boolean eventRunning = false;
+    private int taskId = -1;
+    private int remainingTime = 0;
     private BossBar bossBar;
-    private BukkitTask ticker;
+
+    // Player UUID -> PlayerStats
+    private final Map<UUID, PlayerStats> stats = new HashMap<>();
 
     public FishingManager(FishingEventPlugin plugin) {
         this.plugin = plugin;
     }
 
-    public boolean isRunning() { return running; }
-
-    public Optional<Integer> pointsFor(Material m) {
-        return Optional.ofNullable(pointsTable.get(m));
+    public boolean isRunning() {
+        return eventRunning;
     }
 
-    public void addCatch(Player p, int pointsToAdd, Material fishType) {
-        if (!running) return;
-        Stats s = stats.computeIfAbsent(p.getUniqueId(), k -> new Stats());
-        s.fish++;
-        s.points += pointsToAdd;
+    public void startEvent(int durationSeconds) {
+        if (eventRunning) return;
 
-        String fishName = formatEnumName(fishType);
-        Bukkit.getServer().broadcastMessage(
-                ChatColor.GOLD + p.getName() + ChatColor.YELLOW + " caught " +
-                        ChatColor.AQUA + fishName + ChatColor.YELLOW +
-                        " (Total Score: " + ChatColor.GREEN + s.points + ChatColor.YELLOW + ")"
-        );
-    }
-
-    private String formatEnumName(Material m) {
-        String t = m.name().toLowerCase(Locale.ENGLISH).replace('_', ' ');
-        String[] parts = t.split(" ");
-        StringBuilder sb = new StringBuilder();
-        for (String part : parts) {
-            if (part.isEmpty()) continue;
-            sb.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)).append(' ');
-        }
-        return sb.toString().trim();
-    }
-
-    public void start(int seconds) {
-        if (running) forceStop(false);
-
-        running = true;
+        eventRunning = true;
+        remainingTime = durationSeconds;
         stats.clear();
 
-        endEpochMs = System.currentTimeMillis() + seconds * 1000L;
-        bossBar = Bukkit.createBossBar(titleForRemaining(), BarColor.BLUE, BarStyle.SOLID);
-        bossBar.setProgress(1.0);
-        for (Player p : Bukkit.getOnlinePlayers()) bossBar.addPlayer(p);
+        // Create BossBar
+        bossBar = Bukkit.createBossBar("§bFishing Event - Time Left: " + remainingTime + "s",
+                BarColor.BLUE, BarStyle.SEGMENTED_10);
+        bossBar.setVisible(true);
+        Bukkit.getOnlinePlayers().forEach(bossBar::addPlayer);
 
-        ticker = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            long remaining = remainingSeconds();
-            if (remaining <= 0) {
-                forceStop(true);
-                return;
-            }
-            double progress = Math.max(0.0, Math.min(1.0,
-                    (double) remaining / Math.max(1, seconds)));
+        // Countdown task
+        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+            remainingTime--;
+
+            double progress = Math.max(0, (double) remainingTime / durationSeconds);
             bossBar.setProgress(progress);
-            bossBar.setTitle(titleForRemaining());
-        }, 0L, 20L);
+            bossBar.setTitle("§bFishing Event - Time Left: " + remainingTime + "s");
 
-        Bukkit.broadcastMessage(ChatColor.AQUA + "Fishing event started for " + seconds + "s!");
+            if (remainingTime <= 0) {
+                forceStop(true);
+            }
+        }, 20L, 20L);
+
+        Bukkit.broadcastMessage("§aFishing Event started for " + durationSeconds + " seconds!");
+    }
+
+    public void addCatch(Player player, String fishName, int score) {
+        if (!eventRunning) return;
+
+        PlayerStats ps = stats.computeIfAbsent(player.getUniqueId(),
+                uuid -> new PlayerStats(player.getName()));
+        ps.addFish(score);
+
+        Bukkit.broadcastMessage("§e" + player.getName() + " caught " + fishName +
+                " §7(Total Score: §a" + ps.getScore() + "§7)");
+
+        updateHologram();
+    }
+
+    private void updateHologram() {
+        // If using DecentHolograms command system, update here.
+        // Example with PlaceholderAPI: The placeholders will pull from getTopName() and getTopScore()
+        // No direct command calls here — keep it placeholder-driven
     }
 
     public void forceStop(boolean announceWinners) {
-        if (ticker != null) { ticker.cancel(); ticker = null; }
+        if (!eventRunning) return;
+
+        eventRunning = false;
+
+        if (taskId != -1) {
+            Bukkit.getScheduler().cancelTask(taskId);
+            taskId = -1;
+        }
+
         if (bossBar != null) {
             bossBar.removeAll();
             bossBar = null;
         }
 
-        if (running && announceWinners) {
-            List<Map.Entry<UUID, Stats>> top = getTop(5);
-            Bukkit.broadcastMessage(ChatColor.AQUA + "Fishing event ended! Results:");
-            for (int i = 0; i < Math.min(5, top.size()); i++) {
-                Map.Entry<UUID, Stats> e = top.get(i);
-                OfflinePlayer op = Bukkit.getOfflinePlayer(e.getKey());
-                Bukkit.broadcastMessage(rankColor(i+1) + "#" + (i+1) + " " +
-                        ChatColor.YELLOW + op.getName() +
-                        ChatColor.GRAY + " | Fish: " + e.getValue().fish +
-                        " | Score: " + ChatColor.GREEN + e.getValue().points);
+        if (announceWinners) {
+            Bukkit.broadcastMessage("§bFishing Event Ended!");
+            List<PlayerStats> top = getTopPlayers(3);
+            for (int i = 0; i < top.size(); i++) {
+                PlayerStats ps = top.get(i);
+                Bukkit.broadcastMessage("§6#" + (i + 1) + " §e" + ps.getName() +
+                        " §7- Fish: §a" + ps.getFishCount() +
+                        " §7Score: §a" + ps.getScore());
             }
         }
-
-        running = false;
-        endEpochMs = 0L;
     }
 
-    public long remainingSeconds() {
-        if (!running) return 0;
-        long ms = endEpochMs - System.currentTimeMillis();
-        return Math.max(0, ms / 1000L);
-    }
-
-    private String titleForRemaining() {
-        long s = remainingSeconds();
-        long m = s / 60;
-        long r = s % 60;
-        return ChatColor.AQUA + "Fishing Event " + ChatColor.WHITE + String.format("(%02d:%02d)", m, r);
-    }
-
-    public void onJoin(Player p) {
-        if (bossBar != null) bossBar.addPlayer(p);
-    }
-
-    public List<Map.Entry<UUID, Stats>> getTop(int n) {
-        return stats.entrySet().stream()
-                .sorted(Comparator.<Map.Entry<UUID, Stats>>comparingInt(e -> e.getValue().points)
-                        .reversed()
-                        .thenComparing(e -> e.getValue().fish, Comparator.reverseOrder()))
-                .limit(n)
+    public List<PlayerStats> getTopPlayers(int limit) {
+        return stats.values().stream()
+                .sorted(Comparator.comparingInt(PlayerStats::getScore).reversed())
+                .limit(limit)
                 .collect(Collectors.toList());
     }
 
-    // PlaceholderAPI helper methods
+    // Placeholder support with empty ranks
     public String getTopName(int rank) {
-        List<Map.Entry<UUID, Stats>> t = getTop(rank);
-        if (t.size() < rank) return "§7---";
-        UUID id = t.get(rank - 1).getKey();
-        OfflinePlayer op = Bukkit.getOfflinePlayer(id);
-        return (op.getName() != null) ? op.getName() : "§7---";
+        List<PlayerStats> top = getTopPlayers(rank);
+        if (top.size() >= rank) {
+            return top.get(rank - 1).getName();
+        }
+        return "§7---";
     }
 
     public String getTopScore(int rank) {
-        List<Map.Entry<UUID, Stats>> t = getTop(rank);
-        if (t.size() < rank) return "§7---";
-        return String.valueOf(t.get(rank - 1).getValue().points);
+        List<PlayerStats> top = getTopPlayers(rank);
+        if (top.size() >= rank) {
+            return String.valueOf(top.get(rank - 1).getScore());
+        }
+        return "§7---";
     }
 
-    private ChatColor rankColor(int rank) {
-        return switch (rank) {
-            case 1 -> ChatColor.GOLD;
-            case 2 -> ChatColor.YELLOW;
-            case 3 -> ChatColor.GREEN;
-            default -> ChatColor.GRAY;
-        };
+    public String getTopFishCount(int rank) {
+        List<PlayerStats> top = getTopPlayers(rank);
+        if (top.size() >= rank) {
+            return String.valueOf(top.get(rank - 1).getFishCount());
+        }
+        return "§7---";
     }
 }

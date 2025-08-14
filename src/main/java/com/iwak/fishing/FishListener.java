@@ -19,9 +19,10 @@ public class FishListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        // If you don’t have manager.onJoin in FishingManager, you can remove this method entirely
-        // or keep it empty.
-        // For now, I’ll keep it just in case you add logic later.
+        // Ensure the joining player sees boss bar if event is running
+        if (manager.isRunning()) {
+            manager.addPlayerToBossBar(e.getPlayer());
+        }
     }
 
     @EventHandler
@@ -34,12 +35,12 @@ public class FishListener implements Listener {
         Material type = stack.getType();
 
         int pointsPer = manager.pointsFor(type);
-        if (pointsPer <= 0) return; // skip items worth 0 points
+        if (pointsPer <= 0) return; // skip items that aren't counted
 
-        Player player = event.getPlayer();
+        Player p = event.getPlayer();
         int amount = Math.max(1, stack.getAmount());
-        String fishName = type.name().replace("_", " ").toLowerCase();
+        int totalPoints = pointsPer * amount;
 
-        manager.addCatch(player, fishName, pointsPer * amount);
+        manager.addCatch(p, type.name(), totalPoints);
     }
 }

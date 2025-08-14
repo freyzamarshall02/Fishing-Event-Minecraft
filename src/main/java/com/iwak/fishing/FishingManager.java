@@ -1,6 +1,7 @@
 package com.iwak.fishing;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -26,6 +27,22 @@ public class FishingManager {
 
     public boolean isRunning() {
         return eventRunning;
+    }
+
+    /** Called when a player joins — ensures they're tracked in stats */
+    public void onJoin(Player player) {
+        stats.putIfAbsent(player.getUniqueId(), new PlayerStats(player.getName()));
+    }
+
+    /** Returns point value for each fish type */
+    public int pointsFor(Material material) {
+        switch (material) {
+            case COD: return 5;
+            case SALMON: return 7;
+            case PUFFERFISH: return 10;
+            case TROPICAL_FISH: return 15;
+            default: return 1;
+        }
     }
 
     public void startEvent(int durationSeconds) {
@@ -71,9 +88,8 @@ public class FishingManager {
     }
 
     private void updateHologram() {
-        // If using DecentHolograms command system, update here.
-        // Example with PlaceholderAPI: The placeholders will pull from getTopName() and getTopScore()
-        // No direct command calls here — keep it placeholder-driven
+        // PlaceholderAPI will handle fetching leaderboard info
+        // If you wanted to directly call DecentHolograms commands, you could do it here.
     }
 
     public void forceStop(boolean announceWinners) {
@@ -110,7 +126,7 @@ public class FishingManager {
                 .collect(Collectors.toList());
     }
 
-    // Placeholder support with empty ranks
+    // Placeholder-friendly getters
     public String getTopName(int rank) {
         List<PlayerStats> top = getTopPlayers(rank);
         if (top.size() >= rank) {

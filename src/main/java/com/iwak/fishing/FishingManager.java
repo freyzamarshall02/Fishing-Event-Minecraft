@@ -35,18 +35,14 @@ public class FishingManager {
         this.plugin = plugin;
     }
 
-    public boolean isRunning() {
-        return running;
-    }
+    public boolean isRunning() { return running; }
 
     public Optional<Integer> pointsFor(Material m) {
         return Optional.ofNullable(pointsTable.get(m));
     }
 
-    // Called when a valid fish is caught
     public void addCatch(Player p, int pointsToAdd, Material fishType) {
         if (!running) return;
-
         Stats s = stats.computeIfAbsent(p.getUniqueId(), k -> new Stats());
         s.fish++;
         s.points += pointsToAdd;
@@ -64,9 +60,8 @@ public class FishingManager {
         String[] parts = t.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String part : parts) {
-            if (!part.isEmpty()) {
-                sb.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)).append(' ');
-            }
+            if (part.isEmpty()) continue;
+            sb.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)).append(' ');
         }
         return sb.toString().trim();
     }
@@ -82,7 +77,6 @@ public class FishingManager {
         bossBar.setProgress(1.0);
         for (Player p : Bukkit.getOnlinePlayers()) bossBar.addPlayer(p);
 
-        // Tick every second
         ticker = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             long remaining = remainingSeconds();
             if (remaining <= 0) {
@@ -95,14 +89,11 @@ public class FishingManager {
             bossBar.setTitle(titleForRemaining());
         }, 0L, 20L);
 
-        Bukkit.broadcastMessage(ChatColor.AQUA + "Fishing event started for " + seconds + " seconds!");
+        Bukkit.broadcastMessage(ChatColor.AQUA + "Fishing event started for " + seconds + "s!");
     }
 
     public void forceStop(boolean announceWinners) {
-        if (ticker != null) {
-            ticker.cancel();
-            ticker = null;
-        }
+        if (ticker != null) { ticker.cancel(); ticker = null; }
         if (bossBar != null) {
             bossBar.removeAll();
             bossBar = null;
@@ -114,7 +105,7 @@ public class FishingManager {
             for (int i = 0; i < Math.min(5, top.size()); i++) {
                 Map.Entry<UUID, Stats> e = top.get(i);
                 OfflinePlayer op = Bukkit.getOfflinePlayer(e.getKey());
-                Bukkit.broadcastMessage(rankColor(i + 1) + "#" + (i + 1) + " " +
+                Bukkit.broadcastMessage(rankColor(i+1) + "#" + (i+1) + " " +
                         ChatColor.YELLOW + op.getName() +
                         ChatColor.GRAY + " | Fish: " + e.getValue().fish +
                         " | Score: " + ChatColor.GREEN + e.getValue().points);
@@ -151,26 +142,10 @@ public class FishingManager {
                 .collect(Collectors.toList());
     }
 
+    // PlaceholderAPI helper methods
     public String getTopName(int rank) {
         List<Map.Entry<UUID, Stats>> t = getTop(rank);
         if (t.size() < rank) return "§7---";
         UUID id = t.get(rank - 1).getKey();
         OfflinePlayer op = Bukkit.getOfflinePlayer(id);
-        return (op.getName() != null) ? op.getName() : "§7---";
-    }
-
-    public String getTopScore(int rank) {
-        List<Map.Entry<UUID, Stats>> t = getTop(rank);
-        if (t.size() < rank) return "§7---";
-        return String.valueOf(t.get(rank - 1).getValue().points);
-    }
-
-    private ChatColor rankColor(int rank) {
-        return switch (rank) {
-            case 1 -> ChatColor.GOLD;
-            case 2 -> ChatColor.YELLOW;
-            case 3 -> ChatColor.GREEN;
-            default -> ChatColor.GRAY;
-        };
-    }
-}
+        return (op.getName() != null) ? op.getName

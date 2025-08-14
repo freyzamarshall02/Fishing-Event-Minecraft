@@ -5,7 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-public class StopCommand implements CommandExecutor {
+public class FishingStopCommand implements CommandExecutor {
     private final FishingManager manager;
     public StopCommand(FishingManager manager) { this.manager = manager; }
 

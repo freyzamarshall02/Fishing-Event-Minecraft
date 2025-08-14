@@ -7,7 +7,6 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,19 +35,21 @@ public class FishingManager {
         this.plugin = plugin;
     }
 
-    public boolean isRunning() { return running; }
+    public boolean isRunning() {
+        return running;
+    }
 
     public Optional<Integer> pointsFor(Material m) {
         return Optional.ofNullable(pointsTable.get(m));
     }
 
     // Called when a valid fish is caught
-    public void addCatch(Player p, int points, Material fishType) {
+    public void addCatch(Player p, int pointsToAdd, Material fishType) {
         if (!running) return;
 
         Stats s = stats.computeIfAbsent(p.getUniqueId(), k -> new Stats());
         s.fish++;
-        s.points += points;
+        s.points += pointsToAdd;
 
         String fishName = formatEnumName(fishType);
         Bukkit.getServer().broadcastMessage(
@@ -63,8 +64,9 @@ public class FishingManager {
         String[] parts = t.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String part : parts) {
-            if (part.isEmpty()) continue;
-            sb.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)).append(' ');
+            if (!part.isEmpty()) {
+                sb.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)).append(' ');
+            }
         }
         return sb.toString().trim();
     }
@@ -93,11 +95,14 @@ public class FishingManager {
             bossBar.setTitle(titleForRemaining());
         }, 0L, 20L);
 
-        Bukkit.broadcastMessage(ChatColor.AQUA + "Fishing event started for " + seconds + "s!");
+        Bukkit.broadcastMessage(ChatColor.AQUA + "Fishing event started for " + seconds + " seconds!");
     }
 
     public void forceStop(boolean announceWinners) {
-        if (ticker != null) { ticker.cancel(); ticker = null; }
+        if (ticker != null) {
+            ticker.cancel();
+            ticker = null;
+        }
         if (bossBar != null) {
             bossBar.removeAll();
             bossBar = null;
@@ -109,7 +114,7 @@ public class FishingManager {
             for (int i = 0; i < Math.min(5, top.size()); i++) {
                 Map.Entry<UUID, Stats> e = top.get(i);
                 OfflinePlayer op = Bukkit.getOfflinePlayer(e.getKey());
-                Bukkit.broadcastMessage(rankColor(i+1) + "#" + (i+1) + " " +
+                Bukkit.broadcastMessage(rankColor(i + 1) + "#" + (i + 1) + " " +
                         ChatColor.YELLOW + op.getName() +
                         ChatColor.GRAY + " | Fish: " + e.getValue().fish +
                         " | Score: " + ChatColor.GREEN + e.getValue().points);
@@ -151,8 +156,7 @@ public class FishingManager {
         if (t.size() < rank) return "§7---";
         UUID id = t.get(rank - 1).getKey();
         OfflinePlayer op = Bukkit.getOfflinePlayer(id);
-        String name = (op.getName() != null) ? op.getName() : "§7---";
-        return name;
+        return (op.getName() != null) ? op.getName() : "§7---";
     }
 
     public String getTopScore(int rank) {

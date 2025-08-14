@@ -29,22 +29,6 @@ public class FishingManager {
         return eventRunning;
     }
 
-    /** Called when a player joins — ensures they're tracked in stats */
-    public void onJoin(Player player) {
-        stats.putIfAbsent(player.getUniqueId(), new PlayerStats(player.getName()));
-    }
-
-    /** Returns point value for each fish type */
-    public int pointsFor(Material material) {
-        switch (material) {
-            case COD: return 5;
-            case SALMON: return 7;
-            case PUFFERFISH: return 10;
-            case TROPICAL_FISH: return 15;
-            default: return 1;
-        }
-    }
-
     public void startEvent(int durationSeconds) {
         if (eventRunning) return;
 
@@ -81,15 +65,14 @@ public class FishingManager {
                 uuid -> new PlayerStats(player.getName()));
         ps.addFish(score);
 
-        Bukkit.broadcastMessage("§e" + player.getName() + " caught " + fishName +
+        Bukkit.broadcastMessage("§e" + player.getName() + " caught " + formatFishName(fishName) +
                 " §7(Total Score: §a" + ps.getScore() + "§7)");
 
         updateHologram();
     }
 
     private void updateHologram() {
-        // PlaceholderAPI will handle fetching leaderboard info
-        // If you wanted to directly call DecentHolograms commands, you could do it here.
+        // Placeholder-driven hologram updates
     }
 
     public void forceStop(boolean announceWinners) {
@@ -126,7 +109,7 @@ public class FishingManager {
                 .collect(Collectors.toList());
     }
 
-    // Placeholder-friendly getters
+    // Placeholder support with empty ranks
     public String getTopName(int rank) {
         List<PlayerStats> top = getTopPlayers(rank);
         if (top.size() >= rank) {
@@ -149,5 +132,41 @@ public class FishingManager {
             return String.valueOf(top.get(rank - 1).getFishCount());
         }
         return "§7---";
+    }
+
+    /**
+     * Returns the point value for each caught fish type.
+     */
+    public int pointsFor(Material mat) {
+        switch (mat) {
+            case COD:
+            case RAW_FISH:
+                return 1;
+            case SALMON:
+                return 2;
+            case TROPICAL_FISH:
+                return 3;
+            case PUFFERFISH:
+                return 4;
+            default:
+                return 0; // not counted
+        }
+    }
+
+    /**
+     * Nicely formats fish names instead of showing raw enum names.
+     */
+    private String formatFishName(String raw) {
+        String lower = raw.toLowerCase().replace("_", " ");
+        String[] words = lower.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (String word : words) {
+            if (word.length() > 0) {
+                sb.append(Character.toUpperCase(word.charAt(0)))
+                  .append(word.substring(1))
+                  .append(" ");
+            }
+        }
+        return sb.toString().trim();
     }
 }

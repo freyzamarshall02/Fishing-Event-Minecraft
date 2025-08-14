@@ -10,20 +10,19 @@ public class FishingEventPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         this.manager = new FishingManager(this);
-        // Events
-        Bukkit.getPluginManager().registerEvents(new FishListener(manager), this);
 
-        // Commands
-        getCommand("fishingstart").setExecutor(new StartCommand(manager));
-        getCommand("fishingstop").setExecutor(new StopCommand(manager));
-
-        // Placeholders
+        // Register placeholders if PlaceholderAPI is present
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new FishingPlaceholders(manager).register();
-            getLogger().info("PlaceholderAPI found. Fishing placeholders registered.");
+            getLogger().info("FishingEvent placeholders registered!");
         } else {
-            getLogger().warning("PlaceholderAPI not found. Placeholders will be unavailable.");
+            getLogger().warning("PlaceholderAPI not found - placeholders will not work!");
         }
+
+        // Always register commands & listeners
+        getServer().getPluginManager().registerEvents(new FishingListener(manager), this);
+        getCommand("fishingstart").setExecutor(new FishingStartCommand(manager));
+        getCommand("fishingstop").setExecutor(new FishingStopCommand(manager));
     }
 
     @Override
@@ -31,5 +30,7 @@ public class FishingEventPlugin extends JavaPlugin {
         if (manager != null) manager.forceStop(false);
     }
 
-    public FishingManager getManager() { return manager; }
+    public FishingManager getManager() {
+        return manager;
+    }
 }

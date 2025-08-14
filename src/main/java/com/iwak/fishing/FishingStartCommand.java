@@ -19,10 +19,14 @@ public class FishingStartCommand implements CommandExecutor {
             return true;
         }
 
-        int duration = 100; // default seconds
+        int duration = 100; // default 100 seconds
         if (args.length > 0) {
             try {
                 duration = Integer.parseInt(args[0]);
+                if (duration <= 0) {
+                    sender.sendMessage("§cDuration must be positive. Using default 100 seconds.");
+                    duration = 100;
+                }
             } catch (NumberFormatException e) {
                 sender.sendMessage("§cInvalid number, using default 100 seconds.");
             }

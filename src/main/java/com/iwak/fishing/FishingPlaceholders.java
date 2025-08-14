@@ -14,12 +14,12 @@ public class FishingPlaceholders extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getIdentifier() {
-        return "fishing_event"; // this is the prefix in %fishing_event_1_name%
+        return "fishingevent";
     }
 
     @Override
     public @NotNull String getAuthor() {
-        return "Iwak"; // change to your name
+        return "YourName";
     }
 
     @Override
@@ -29,31 +29,38 @@ public class FishingPlaceholders extends PlaceholderExpansion {
 
     @Override
     public boolean persist() {
-        return true; // Keep registered after reloads
+        return true; // This ensures it stays loaded
     }
 
     @Override
-    public boolean canRegister() {
-        return true;
-    }
-
-    @Override
-    public String onPlaceholderRequest(Player player, @NotNull String params) {
-        // Example: params = "1_name" or "3_score"
-        String[] split = params.split("_");
-        if (split.length != 2) return null;
-
-        try {
-            int rank = Integer.parseInt(split[0]);
-            String type = split[1];
-
-            if (type.equalsIgnoreCase("name")) {
+    public String onPlaceholderRequest(Player player, @NotNull String identifier) {
+        // Example: top_name_1
+        if (identifier.startsWith("top_name_")) {
+            try {
+                int rank = Integer.parseInt(identifier.substring("top_name_".length()));
                 return manager.getTopName(rank);
-            } else if (type.equalsIgnoreCase("score")) {
-                return manager.getTopScore(rank);
+            } catch (NumberFormatException ignored) {
             }
-        } catch (NumberFormatException ignored) {}
+        }
 
-        return null;
+        // Example: top_score_1
+        if (identifier.startsWith("top_score_")) {
+            try {
+                int rank = Integer.parseInt(identifier.substring("top_score_".length()));
+                return manager.getTopScore(rank);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        // Example: top_fish_1
+        if (identifier.startsWith("top_fish_")) {
+            try {
+                int rank = Integer.parseInt(identifier.substring("top_fish_".length()));
+                return manager.getTopFishCount(rank);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        return null; // Placeholder not found
     }
 }

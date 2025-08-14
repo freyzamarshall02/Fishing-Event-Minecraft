@@ -20,7 +20,7 @@ public class FishingEventPlugin extends JavaPlugin {
         }
 
         // Always register commands & listeners
-        getServer().getPluginManager().registerEvents(new FishingListener(manager), this);
+        getServer().getPluginManager().registerEvents(new FishListener(manager), this);
         getCommand("fishingstart").setExecutor(new FishingStartCommand(manager));
         getCommand("fishingstop").setExecutor(new FishingStopCommand(manager));
     }

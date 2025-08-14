@@ -148,15 +148,16 @@ public class FishingManager {
 
     public String getTopName(int rank) {
         List<Map.Entry<UUID, Stats>> t = getTop(rank);
-        if (t.size() < rank) return "-";
+        if (t.size() < rank) return "§7---";
         UUID id = t.get(rank - 1).getKey();
         OfflinePlayer op = Bukkit.getOfflinePlayer(id);
-        return op.getName() != null ? op.getName() : "-";
+        String name = (op.getName() != null) ? op.getName() : "§7---";
+        return name;
     }
 
     public String getTopScore(int rank) {
         List<Map.Entry<UUID, Stats>> t = getTop(rank);
-        if (t.size() < rank) return "0";
+        if (t.size() < rank) return "§7---";
         return String.valueOf(t.get(rank - 1).getValue().points);
     }
 

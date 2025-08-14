@@ -1,11 +1,11 @@
 package com.iwak.fishing;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
 public class FishingStartCommand implements CommandExecutor {
+
     private final FishingManager manager;
 
     public FishingStartCommand(FishingManager manager) {
@@ -14,31 +14,22 @@ public class FishingStartCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("fishingevent.admin")) {
-            sender.sendMessage(ChatColor.RED + "No permission.");
+        if (manager.isRunning()) {
+            sender.sendMessage("§cA fishing event is already running!");
             return true;
         }
 
-        if (args.length != 1) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <seconds>");
-            return true;
+        int duration = 100; // default seconds
+        if (args.length > 0) {
+            try {
+                duration = Integer.parseInt(args[0]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("§cInvalid number, using default 100 seconds.");
+            }
         }
 
-        int sec;
-        try {
-            sec = Integer.parseInt(args[0]);
-        } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "Not a number: " + args[0]);
-            return true;
-        }
-
-        if (sec <= 0) {
-            sender.sendMessage(ChatColor.RED + "Seconds must be > 0");
-            return true;
-        }
-
-        manager.start(sec);
-        sender.sendMessage(ChatColor.GREEN + "Fishing event started for " + sec + " seconds.");
+        manager.startEvent(duration);
+        sender.sendMessage("§aFishing event started for " + duration + " seconds!");
         return true;
     }
 }

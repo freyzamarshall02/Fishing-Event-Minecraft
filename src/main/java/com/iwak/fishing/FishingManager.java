@@ -20,24 +20,30 @@ public class FishingManager {
 
     // Player UUID -> PlayerStats
     private final Map<UUID, PlayerStats> stats = new HashMap<>();
-    // Material -> points mapping
-    private final Map<Material, Integer> pointsMap = new HashMap<>();
+
+    // Config-based fish points
+    private final Map<Material, Integer> fishPoints = new HashMap<>();
 
     public FishingManager(FishingEventPlugin plugin) {
         this.plugin = plugin;
-        setupDefaultPoints();
+        loadPoints();
     }
 
-    private void setupDefaultPoints() {
-        // Example points — customize for your server
-        pointsMap.put(Material.COD, 1);
-        pointsMap.put(Material.SALMON, 2);
-        pointsMap.put(Material.TROPICAL_FISH, 3);
-        pointsMap.put(Material.PUFFERFISH, 5);
+    public void loadPoints() {
+        fishPoints.clear();
+        for (String key : plugin.getConfig().getConfigurationSection("fish-points").getKeys(false)) {
+            try {
+                Material mat = Material.valueOf(key.toUpperCase());
+                int points = plugin.getConfig().getInt("fish-points." + key, 1);
+                fishPoints.put(mat, points);
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning("Invalid material in config: " + key);
+            }
+        }
     }
 
-    public int pointsFor(Material type) {
-        return pointsMap.getOrDefault(type, 0);
+    public Optional<Integer> getPointsFor(Material mat) {
+        return Optional.ofNullable(fishPoints.get(mat));
     }
 
     public boolean isRunning() {
@@ -86,14 +92,8 @@ public class FishingManager {
         updateHologram();
     }
 
-    public void addPlayerToBossBar(Player player) {
-        if (bossBar != null) {
-            bossBar.addPlayer(player);
-        }
-    }
-
     private void updateHologram() {
-        // If using DecentHolograms or another plugin, update here via placeholders
+        // If using DecentHolograms + PlaceholderAPI, nothing needed here.
     }
 
     public void forceStop(boolean announceWinners) {
@@ -123,6 +123,11 @@ public class FishingManager {
         }
     }
 
+    public void resetLeaderboard() {
+        stats.clear();
+        Bukkit.broadcastMessage("§cFishing Event leaderboard has been reset!");
+    }
+
     public List<PlayerStats> getTopPlayers(int limit) {
         return stats.values().stream()
                 .sorted(Comparator.comparingInt(PlayerStats::getScore).reversed())
@@ -130,7 +135,7 @@ public class FishingManager {
                 .collect(Collectors.toList());
     }
 
-    // Placeholder-friendly methods
+    // Placeholder support with empty ranks
     public String getTopName(int rank) {
         List<PlayerStats> top = getTopPlayers(rank);
         if (top.size() >= rank) {

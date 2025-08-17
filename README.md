@@ -1,73 +1,50 @@
-# 🎣 Fishing Event Plugin
+# 🎣 FishingEvent Plugin
 
-A lightweight Minecraft plugin for running fishing competitions with a live leaderboard, PlaceholderAPI support, and customizable scoring.
+A lightweight and customizable **Fishing Event** plugin for Minecraft (Spigot/Paper).  
+Supports **custom scoring per fish type**, leaderboard placeholders, and easy commands to control events.
 
 ---
 
-## 📜 Features
+## 📌 Features
 - Start and stop timed fishing events.
-- Tracks each player's total fish count and score.
-- Live boss bar countdown.
-- **Top 5 leaderboard placeholders** for use in holograms, scoreboards, etc.
-- Compatible with **Paper/Spigot** servers.
+- BossBar countdown for active events.
+- Leaderboard system with **PlaceholderAPI** support.
+- Configurable **fish scoring per type** (`config.yml`).
+- Reset leaderboard with a simple command.
+- Works with **DecentHolograms** (via placeholders).
 
 ---
 
-## ⌨ Commands
-
-| Command                | Description                             | Permission        |
-|------------------------|-----------------------------------------|-------------------|
-| `/fishingstart <time>` | Start a fishing event for `<time>` seconds | `fishingevent.start` |
-| `/fishingstop`         | Stop the current fishing event          | `fishingevent.stop`  |
-
----
-
-## 🏷 Placeholders
-
-Requires **[PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/)**.
-
-| Placeholder                       | Description                          |
-|-----------------------------------|--------------------------------------|
-| `%fishingevent_top_name_1%`       | Name of player in 1st place           |
-| `%fishingevent_top_score_1%`      | Score of player in 1st place          |
-| `%fishingevent_top_fish_1%`       | Fish count of player in 1st place     |
-| `%fishingevent_top_name_2%`       | Name of player in 2nd place           |
-| `%fishingevent_top_score_2%`      | Score of player in 2nd place          |
-| `%fishingevent_top_fish_2%`       | Fish count of player in 2nd place     |
-| `%fishingevent_top_name_3%`       | Name of player in 3rd place           |
-| `%fishingevent_top_score_3%`      | Score of player in 3rd place          |
-| `%fishingevent_top_fish_3%`       | Fish count of player in 3rd place     |
-| `%fishingevent_top_name_4%`       | Name of player in 4th place           |
-| `%fishingevent_top_score_4%`      | Score of player in 4th place          |
-| `%fishingevent_top_fish_4%`       | Fish count of player in 4th place     |
-| `%fishingevent_top_name_5%`       | Name of player in 5th place           |
-| `%fishingevent_top_score_5%`      | Score of player in 5th place          |
-| `%fishingevent_top_fish_5%`       | Fish count of player in 5th place     |
-
-> **Note:** If there is no player in that rank, the placeholder will return `---`.
+## ⚙️ Commands
+| Command | Description | Permission |
+|---------|-------------|------------|
+| `/fishingstart <seconds>` | Starts a fishing event for the given time. | `fishingevent.start` |
+| `/fishingstop` | Stops the current fishing event. | `fishingevent.stop` |
+| `/fishingreset` | Resets the leaderboard stats. | `fishingevent.reset` |
 
 ---
 
-## 🖥 Supported Server Types
-- **Paper** (recommended)
-- **Spigot**
-- **Purpur** (untested but should work)
+## 🪝 Placeholders
+Available via **PlaceholderAPI**:
+
+| Placeholder | Description |
+|-------------|-------------|
+| `%fishingevent_top_name_<n>%` | Name of the player in rank `<n>` (1–3 by default). |
+| `%fishingevent_top_score_<n>%` | Score of the player in rank `<n>`. |
+| `%fishingevent_top_fish_<n>%` | Total fish caught by the player in rank `<n>`. |
+
+> If a rank does not exist, the placeholder returns `§7---`.
 
 ---
 
-## 📦 Supported Versions
-- **Minecraft 1.21.7**
-- Should work on **1.20+** (not tested on earlier versions)
+## 🐟 Config (config.yml)
+When first run, the plugin generates `plugins/FishingEvent/config.yml`.  
+Here you can define **custom points per fish type**:
 
----
-
-## ⚙ Installation
-1. Download the `.jar` and place it in your `plugins` folder.
-2. Install **PlaceholderAPI** if you want placeholders.
-3. Restart your server.
-4. Use `/fishingstart` to start an event and enjoy!
-
----
-
-## 📜 License
-This project is free to use and modify for your server.
+```yaml
+fish-scores:
+  COD: 1
+  SALMON: 2
+  TROPICAL_FISH: 3
+  PUFFERFISH: 4
+  # Add more fish types with custom scores

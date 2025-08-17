@@ -9,6 +9,7 @@ public class FishingEventPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig(); // generate config.yml if missing
         this.manager = new FishingManager(this);
 
         // Register placeholders if PlaceholderAPI is present
@@ -19,10 +20,10 @@ public class FishingEventPlugin extends JavaPlugin {
             getLogger().warning("PlaceholderAPI not found - placeholders will not work!");
         }
 
-        // Always register commands & listeners
         getServer().getPluginManager().registerEvents(new FishListener(manager), this);
         getCommand("fishingstart").setExecutor(new FishingStartCommand(manager));
         getCommand("fishingstop").setExecutor(new FishingStopCommand(manager));
+        getCommand("fishingreset").setExecutor(new FishingResetCommand(manager));
     }
 
     @Override

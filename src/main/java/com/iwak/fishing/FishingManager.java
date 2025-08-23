@@ -1,9 +1,11 @@
 package com.iwak.fishing;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -19,30 +21,39 @@ public class FishingManager {
 
     // Player UUID -> PlayerStats
     private final Map<UUID, PlayerStats> stats = new HashMap<>();
-
-    // Config values
+    private final Map<Material, Integer> fishScores = new HashMap<>();
     private final int minimumPlayers;
     private final boolean enablePrizes;
-    private final Map<Integer, String> prizes;
+    private final Map<Integer, String> prizes = new HashMap<>();
 
     public FishingManager(FishingEventPlugin plugin) {
         this.plugin = plugin;
 
-        // Load config values
-        this.minimumPlayers = plugin.getConfig().getInt("minimum-players", 2);
-        this.enablePrizes = plugin.getConfig().getBoolean("enable-prizes", false);
+        // Load config
+        FileConfiguration config = plugin.getConfig();
+        this.minimumPlayers = config.getInt("minimum-players", 2);
+        this.enablePrizes = config.getBoolean("enable-prizes", true);
 
-        // Load prizes
-        Map<Integer, String> loadedPrizes = new HashMap<>();
-        if (plugin.getConfig().isConfigurationSection("prizes")) {
-            for (String key : plugin.getConfig().getConfigurationSection("prizes").getKeys(false)) {
+        // Load prize commands
+        if (config.isConfigurationSection("prizes")) {
+            for (String key : config.getConfigurationSection("prizes").getKeys(false)) {
                 try {
-                    int place = Integer.parseInt(key);
-                    loadedPrizes.put(place, plugin.getConfig().getString("prizes." + key));
+                    int rank = Integer.parseInt(key);
+                    prizes.put(rank, config.getString("prizes." + key));
                 } catch (NumberFormatException ignored) {}
             }
         }
-        this.prizes = loadedPrizes;
+
+        // Load fish scores
+        if (config.isConfigurationSection("fish-scores")) {
+            for (String key : config.getConfigurationSection("fish-scores").getKeys(false)) {
+                try {
+                    Material mat = Material.valueOf(key.toUpperCase());
+                    int score = config.getInt("fish-scores." + key);
+                    fishScores.put(mat, score);
+                } catch (IllegalArgumentException ignored) {}
+            }
+        }
     }
 
     public boolean isRunning() {
@@ -52,10 +63,8 @@ public class FishingManager {
     public void startEvent(int durationSeconds) {
         if (eventRunning) return;
 
-        // Check minimum players
-        int online = Bukkit.getOnlinePlayers().size();
-        if (online < minimumPlayers) {
-            Bukkit.broadcastMessage("§cNot enough players to start the Fishing Event! Need at least " + minimumPlayers + " players.");
+        if (Bukkit.getOnlinePlayers().size() < minimumPlayers) {
+            Bukkit.broadcastMessage("§cNot enough players to start the Fishing Event! Minimum: " + minimumPlayers);
             return;
         }
 
@@ -85,21 +94,23 @@ public class FishingManager {
         Bukkit.broadcastMessage("§aFishing Event started for " + durationSeconds + " seconds!");
     }
 
-    public void addCatch(Player player, String fishName, int score) {
+    public void addCatch(Player player, Material type, int amount) {
         if (!eventRunning) return;
+
+        int score = fishScores.getOrDefault(type, 1) * amount;
 
         PlayerStats ps = stats.computeIfAbsent(player.getUniqueId(),
                 uuid -> new PlayerStats(player.getName()));
         ps.addFish(score);
 
-        Bukkit.broadcastMessage("§e" + player.getName() + " caught " + fishName +
+        Bukkit.broadcastMessage("§e" + player.getName() + " caught " + type.name() +
                 " §7(Total Score: §a" + ps.getScore() + "§7)");
 
         updateHologram();
     }
 
     private void updateHologram() {
-        // If using DecentHolograms or PlaceholderAPI, placeholders will pull from getTopName(), getTopScore(), etc.
+        // Hook PlaceholderAPI or DecentHolograms here if needed
     }
 
     public void forceStop(boolean announceWinners) {
@@ -123,19 +134,16 @@ public class FishingManager {
 
             for (int i = 0; i < top.size(); i++) {
                 PlayerStats ps = top.get(i);
-                int place = i + 1;
-                Bukkit.broadcastMessage("§6#" + place + " §e" + ps.getName() +
+                int rank = i + 1;
+                Bukkit.broadcastMessage("§6#" + rank + " §e" + ps.getName() +
                         " §7- Fish: §a" + ps.getFishCount() +
                         " §7Score: §a" + ps.getScore());
 
-                // Prize handling
-                if (enablePrizes && prizes.containsKey(place)) {
-                    String rawCommand = prizes.get(place);
-                    String command = rawCommand.replace("%player%", ps.getName());
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-
-                    Bukkit.broadcastMessage("§dPrize: §6#" + place + " §e" + ps.getName() +
-                            " §7won §a" + rawCommand.replace("%player%", ps.getName()));
+                // Give prize if enabled
+                if (enablePrizes && prizes.containsKey(rank)) {
+                    String cmd = prizes.get(rank).replace("%player%", ps.getName());
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+                    Bukkit.broadcastMessage("§d#" + rank + " " + ps.getName() + " won prize: §f" + cmd);
                 }
             }
         }
@@ -148,7 +156,7 @@ public class FishingManager {
                 .collect(Collectors.toList());
     }
 
-    // Placeholder support with empty ranks
+    // Placeholder support
     public String getTopName(int rank) {
         List<PlayerStats> top = getTopPlayers(rank);
         if (top.size() >= rank) {

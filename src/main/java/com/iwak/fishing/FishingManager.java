@@ -20,8 +20,29 @@ public class FishingManager {
     // Player UUID -> PlayerStats
     private final Map<UUID, PlayerStats> stats = new HashMap<>();
 
+    // Config values
+    private final int minimumPlayers;
+    private final boolean enablePrizes;
+    private final Map<Integer, String> prizes;
+
     public FishingManager(FishingEventPlugin plugin) {
         this.plugin = plugin;
+
+        // Load config values
+        this.minimumPlayers = plugin.getConfig().getInt("minimum-players", 2);
+        this.enablePrizes = plugin.getConfig().getBoolean("enable-prizes", false);
+
+        // Load prizes
+        Map<Integer, String> loadedPrizes = new HashMap<>();
+        if (plugin.getConfig().isConfigurationSection("prizes")) {
+            for (String key : plugin.getConfig().getConfigurationSection("prizes").getKeys(false)) {
+                try {
+                    int place = Integer.parseInt(key);
+                    loadedPrizes.put(place, plugin.getConfig().getString("prizes." + key));
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        this.prizes = loadedPrizes;
     }
 
     public boolean isRunning() {
@@ -31,11 +52,10 @@ public class FishingManager {
     public void startEvent(int durationSeconds) {
         if (eventRunning) return;
 
+        // Check minimum players
         int online = Bukkit.getOnlinePlayers().size();
-        int minPlayers = plugin.getConfig().getInt("minimum-players", 2);
-
-        if (online < minPlayers) {
-            Bukkit.broadcastMessage("§cNot enough players to start the Fishing Event! (Need at least " + minPlayers + ")");
+        if (online < minimumPlayers) {
+            Bukkit.broadcastMessage("§cNot enough players to start the Fishing Event! Need at least " + minimumPlayers + " players.");
             return;
         }
 
@@ -79,9 +99,7 @@ public class FishingManager {
     }
 
     private void updateHologram() {
-        // If using DecentHolograms command system, update here.
-        // Example with PlaceholderAPI: The placeholders will pull from getTopName() and getTopScore()
-        // No direct command calls here — keep it placeholder-driven
+        // If using DecentHolograms or PlaceholderAPI, placeholders will pull from getTopName(), getTopScore(), etc.
     }
 
     public void forceStop(boolean announceWinners) {
@@ -105,20 +123,19 @@ public class FishingManager {
 
             for (int i = 0; i < top.size(); i++) {
                 PlayerStats ps = top.get(i);
-                Bukkit.broadcastMessage("§6#" + (i + 1) + " §e" + ps.getName() +
+                int place = i + 1;
+                Bukkit.broadcastMessage("§6#" + place + " §e" + ps.getName() +
                         " §7- Fish: §a" + ps.getFishCount() +
                         " §7Score: §a" + ps.getScore());
 
-                // Handle prizes if enabled
-                if (plugin.getConfig().getBoolean("enable-prizes", false)) {
-                    String cmd = plugin.getConfig().getString("prizes." + (i + 1));
-                    if (cmd != null && !cmd.isEmpty()) {
-                        String finalCmd = cmd.replace("{player}", ps.getName());
-                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCmd);
+                // Prize handling
+                if (enablePrizes && prizes.containsKey(place)) {
+                    String rawCommand = prizes.get(place);
+                    String command = rawCommand.replace("%player%", ps.getName());
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
 
-                        Bukkit.broadcastMessage("§d#" + (i + 1) + " §a" + ps.getName() +
-                                " §7won prize: §b" + cmd.replace("{player}", ps.getName()));
-                    }
+                    Bukkit.broadcastMessage("§dPrize: §6#" + place + " §e" + ps.getName() +
+                            " §7won §a" + rawCommand.replace("%player%", ps.getName()));
                 }
             }
         }

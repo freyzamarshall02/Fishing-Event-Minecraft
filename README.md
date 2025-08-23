@@ -42,9 +42,22 @@ When first run, the plugin generates `plugins/FishingEvent/config.yml`.
 Here you can define **custom points per fish type**:
 
 ```yaml
+# Minimum players required to start an event
+min-players: 2
+
+# Enable or disable prize rewards
+prizes-enabled: true
+
+# Rewards for winners (executed as console commands)
+prizes:
+  1: "give %player% diamond 3"
+  2: "give %player% gold_ingot 5"
+  3: "give %player% iron_ingot 10"
+
+# Scoring per fish type
 fish-scores:
   COD: 1
   SALMON: 2
   TROPICAL_FISH: 3
-  PUFFERFISH: 4
-  # Add more fish types with custom scores
+  PUFFERFISH: 5
+

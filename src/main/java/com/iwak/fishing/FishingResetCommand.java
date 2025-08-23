@@ -14,8 +14,8 @@ public class FishingResetCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        manager.reset();
-        sender.sendMessage("§aFishing leaderboard has been reset!");
+        manager.resetLeaderboard();
+        sender.sendMessage(Messages.get("leaderboard-reset-confirm"));
         return true;
     }
 }

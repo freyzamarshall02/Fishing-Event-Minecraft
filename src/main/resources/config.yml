@@ -1,5 +1,21 @@
-fish-points:
+# FishingEvent Config
+
+# Minimum players required to start the event
+minimum-players: 2
+
+# Scoring for each fish type
+fish-scores:
   COD: 1
   SALMON: 2
   TROPICAL_FISH: 3
   PUFFERFISH: 5
+
+# Enable or disable prizes for winners
+enable-prizes: true
+
+# Prize commands for winners
+# {player} will be replaced with the player's name
+prizes:
+  1: "give {player} diamond 3"
+  2: "give {player} gold_ingot 5"
+  3: "give {player} iron_ingot 10"

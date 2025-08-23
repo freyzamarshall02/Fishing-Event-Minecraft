@@ -14,13 +14,13 @@ public class FishingResetCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("fishingevent.reset")) {
-            sender.sendMessage("§cYou do not have permission to reset the leaderboard.");
+        if (manager.isEventRunning()) {
+            sender.sendMessage("§cYou cannot reset while an event is running. Stop it first.");
             return true;
         }
 
-        manager.resetLeaderboard();
-        sender.sendMessage("§aFishing leaderboard has been reset!");
+        manager.resetEvent();
+        sender.sendMessage("§aFishing leaderboard has been reset.");
         return true;
     }
 }

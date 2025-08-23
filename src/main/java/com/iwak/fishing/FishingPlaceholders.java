@@ -1,7 +1,7 @@
 package com.iwak.fishing;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 public class FishingPlaceholders extends PlaceholderExpansion {
@@ -19,48 +19,47 @@ public class FishingPlaceholders extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return "YourName";
+        return "iwak";
     }
 
     @Override
     public @NotNull String getVersion() {
-        return "1.0.0";
+        return "1.0.2";
     }
 
     @Override
-    public boolean persist() {
-        return true; // This ensures it stays loaded
-    }
+    public String onRequest(OfflinePlayer player, @NotNull String params) {
+        if (player == null) return "";
 
-    @Override
-    public String onPlaceholderRequest(Player player, @NotNull String identifier) {
-        // Example: top_name_1
-        if (identifier.startsWith("top_name_")) {
-            try {
-                int rank = Integer.parseInt(identifier.substring("top_name_".length()));
-                return manager.getTopName(rank);
-            } catch (NumberFormatException ignored) {
-            }
+        // %fishingevent_points%
+        if (params.equalsIgnoreCase("points")) {
+            return String.valueOf(manager.getPoints(player.getUniqueId()));
         }
 
-        // Example: top_score_1
-        if (identifier.startsWith("top_score_")) {
+        // %fishingevent_top_1_name%
+        if (params.startsWith("top_") && params.endsWith("_name")) {
             try {
-                int rank = Integer.parseInt(identifier.substring("top_score_".length()));
-                return manager.getTopScore(rank);
-            } catch (NumberFormatException ignored) {
-            }
+                int pos = Integer.parseInt(params.split("_")[1]) - 1;
+                var top = manager.getTopPlayers(pos + 1);
+                if (pos < top.size()) {
+                    return top.get(pos).getName();
+                }
+            } catch (NumberFormatException ignored) {}
+            return "";
         }
 
-        // Example: top_fish_1
-        if (identifier.startsWith("top_fish_")) {
+        // %fishingevent_top_1_points%
+        if (params.startsWith("top_") && params.endsWith("_points")) {
             try {
-                int rank = Integer.parseInt(identifier.substring("top_fish_".length()));
-                return manager.getTopFishCount(rank);
-            } catch (NumberFormatException ignored) {
-            }
+                int pos = Integer.parseInt(params.split("_")[1]) - 1;
+                var top = manager.getTopPlayers(pos + 1);
+                if (pos < top.size()) {
+                    return String.valueOf(top.get(pos).getPoints());
+                }
+            } catch (NumberFormatException ignored) {}
+            return "";
         }
 
-        return null; // Placeholder not found
+        return null; // not recognized
     }
 }

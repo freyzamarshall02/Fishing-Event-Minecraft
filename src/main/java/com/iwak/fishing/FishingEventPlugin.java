@@ -8,12 +8,14 @@ public class FishingEventPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // Load config
         saveDefaultConfig();
+        Messages.load(this);
 
-        // Initialize manager with plugin reference
+        // Initialize manager
         fishingManager = new FishingManager(this);
 
-        // Register listeners
+        // Register events
         getServer().getPluginManager().registerEvents(new FishListener(fishingManager), this);
 
         // Register commands
@@ -21,18 +23,21 @@ public class FishingEventPlugin extends JavaPlugin {
         getCommand("fishingstop").setExecutor(new FishingStopCommand(fishingManager));
         getCommand("fishingreset").setExecutor(new FishingResetCommand(fishingManager));
 
-        // Register placeholders (if PlaceholderAPI is installed)
+        // Register placeholders (if PAPI is installed)
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new FishingPlaceholders(fishingManager).register();
-            getLogger().info("PlaceholderAPI detected: Placeholders enabled.");
+            getLogger().info("FishingEvent placeholders registered with PlaceholderAPI.");
         }
 
-        getLogger().info("FishingEvent plugin enabled!");
+        getLogger().info("FishingEvent enabled!");
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("FishingEvent plugin disabled!");
+        if (fishingManager != null && fishingManager.isEventRunning()) {
+            fishingManager.stopEvent();
+        }
+        getLogger().info("FishingEvent disabled!");
     }
 
     public FishingManager getFishingManager() {

@@ -9,28 +9,26 @@ public class FishingEventPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+        saveResource("messages.yml", false); // ensure messages.yml exists
+        Messages.load(this);
+
         this.manager = new FishingManager(this);
-
-        // Register placeholders if PlaceholderAPI is present
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new FishingPlaceholders(manager).register();
-            getLogger().info("FishingEvent placeholders registered!");
-        } else {
-            getLogger().warning("PlaceholderAPI not found - placeholders will not work!");
-        }
-
-        // Register events
-        getServer().getPluginManager().registerEvents(new FishListener(manager), this);
 
         // Register commands
         getCommand("fishingstart").setExecutor(new FishingStartCommand(manager));
         getCommand("fishingstop").setExecutor(new FishingStopCommand(manager));
         getCommand("fishingreset").setExecutor(new FishingResetCommand(manager));
+
+        // Register listener
+        Bukkit.getPluginManager().registerEvents(new FishListener(manager), this);
+
+        getLogger().info(Messages.get("plugin-enabled"));
     }
 
     @Override
     public void onDisable() {
-        if (manager != null) manager.forceStop(false);
+        getLogger().info(Messages.get("plugin-disabled"));
     }
 
     public FishingManager getManager() {

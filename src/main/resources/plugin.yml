@@ -1,19 +1,21 @@
 name: FishingEvent
 main: com.iwak.fishing.FishingEventPlugin
-version: 1.0.1
+version: 1.0.2
 api-version: 1.19
 author: FreyzaMarshall
-description: A fishing event plugin with leaderboards, placeholders, and configurable fish scoring.
+description: A fishing event plugin with leaderboards, placeholders, configurable fish scoring, minimum players, and prize support.
 
 commands:
   fishingstart:
     description: Start the fishing event for a set amount of seconds
     usage: /fishingstart <seconds>
     permission: fishingevent.start
+
   fishingstop:
     description: Stop the fishing event and announce winners
     usage: /fishingstop
     permission: fishingevent.stop
+
   fishingreset:
     description: Reset the fishing leaderboard
     usage: /fishingreset
@@ -23,9 +25,11 @@ permissions:
   fishingevent.start:
     description: Allows the player to start the fishing event
     default: op
+
   fishingevent.stop:
     description: Allows the player to stop the fishing event
     default: op
+
   fishingevent.reset:
     description: Allows the player to reset the leaderboard
     default: op

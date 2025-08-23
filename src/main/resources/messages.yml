@@ -1,0 +1,33 @@
+# Messages for FishingEvent
+# Color codes (&) are supported (e.g., &a, &c, &e)
+
+prefix: "&b[FishEvent]&r "
+
+# Event lifecycle
+event-started: "&aThe fishing event has started! Catch as many fish as you can!"
+event-stopped: "&cThe fishing event has been stopped by an admin."
+event-ended: "&eThe fishing event has ended! Here are the results:"
+
+# Not enough players
+not-enough-players: "&cNot enough players to start the event. Minimum required: &e%min%"
+
+# Leaderboard announcements
+winner-announce: "&6#%position% &e%player% &7with &b%points% points &7(&a%fish% fish&r&7)!"
+
+# Prize messages
+prize-disabled: "&ePrizes are disabled in config."
+prize-given: "&d%player% &7won prize: &b%prize%"
+
+# Commands
+reset-done: "&aThe fishing leaderboard has been reset."
+no-permission: "&cYou don't have permission to use this command."
+usage-error: "&cUsage: %usage%"
+
+# Placeholders:
+# %player%   -> Player name
+# %points%   -> Total points
+# %fish%     -> Total fish caught
+# %position% -> Leaderboard position (1, 2, 3, etc.)
+# %prize%    -> Executed prize command or reward
+# %usage%    -> Command usage from plugin.yml
+# %min%      -> Minimum required players

@@ -1,30 +1,30 @@
 package com.iwak.fishing;
 
 public class PlayerStats {
-    private final String name;
-    private int fishCount;
-    private int score;
+    private final String playerName;
+    private int points;
+    private int fishCaught;
 
-    public PlayerStats(String name) {
-        this.name = name;
-        this.fishCount = 0;
-        this.score = 0;
+    public PlayerStats(String playerName) {
+        this.playerName = playerName;
+        this.points = 0;
+        this.fishCaught = 0;
     }
 
-    public void addFish(int scoreToAdd) {
-        this.fishCount++;
-        this.score += scoreToAdd;
+    public void addCatch(int points) {
+        this.points += points;
+        this.fishCaught++;
     }
 
-    public String getName() {
-        return name;
+    public String getPlayerName() {
+        return playerName;
     }
 
-    public int getFishCount() {
-        return fishCount;
+    public int getPoints() {
+        return points;
     }
 
-    public int getScore() {
-        return score;
+    public int getFishCaught() {
+        return fishCaught;
     }
 }

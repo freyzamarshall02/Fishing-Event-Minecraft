@@ -14,26 +14,17 @@ public class FishingStartCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (manager.isRunning()) {
-            sender.sendMessage("§cA fishing event is already running!");
+        if (args.length != 1) {
+            sender.sendMessage(Messages.get("usage-fishingstart"));
             return true;
         }
 
-        int duration = 100; // default 100 seconds
-        if (args.length > 0) {
-            try {
-                duration = Integer.parseInt(args[0]);
-                if (duration <= 0) {
-                    sender.sendMessage("§cDuration must be positive. Using default 100 seconds.");
-                    duration = 100;
-                }
-            } catch (NumberFormatException e) {
-                sender.sendMessage("§cInvalid number, using default 100 seconds.");
-            }
+        try {
+            int duration = Integer.parseInt(args[0]);
+            manager.startEvent(duration);
+        } catch (NumberFormatException e) {
+            sender.sendMessage(Messages.get("invalid-number"));
         }
-
-        manager.startEvent(duration);
-        sender.sendMessage("§aFishing event started for " + duration + " seconds!");
         return true;
     }
 }

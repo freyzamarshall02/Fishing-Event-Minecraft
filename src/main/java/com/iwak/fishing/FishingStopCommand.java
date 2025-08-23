@@ -14,13 +14,8 @@ public class FishingStopCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!manager.isRunning()) {
-            sender.sendMessage("§cNo fishing event is currently running!");
-            return true;
-        }
-
-        manager.forceStop(true);
-        sender.sendMessage("§aFishing event stopped!");
+        manager.stopEvent();
+        sender.sendMessage(Messages.get("event-force-stopped"));
         return true;
     }
 }

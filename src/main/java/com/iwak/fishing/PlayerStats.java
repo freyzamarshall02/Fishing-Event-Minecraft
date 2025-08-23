@@ -1,33 +1,37 @@
 package com.iwak.fishing;
 
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
-
 import java.util.UUID;
 
 public class PlayerStats {
-    private final UUID playerId;
-    private int points;
+    private final UUID uuid;
+    private final String name;
+    private int fishCaught;
 
-    public PlayerStats(UUID playerId) {
-        this.playerId = playerId;
-        this.points = 0;
+    public PlayerStats(String name) {
+        this.uuid = UUID.randomUUID(); // If you want real UUID, pass it instead of random
+        this.name = name;
+        this.fishCaught = 0;
     }
 
-    public UUID getPlayerId() {
-        return playerId;
+    public PlayerStats(UUID uuid, String name) {
+        this.uuid = uuid;
+        this.name = name;
+        this.fishCaught = 0;
     }
 
     public String getName() {
-        OfflinePlayer player = Bukkit.getOfflinePlayer(playerId);
-        return player != null && player.getName() != null ? player.getName() : "Unknown";
+        return name;
     }
 
-    public int getPoints() {
-        return points;
+    public int getFishCaught() {
+        return fishCaught;
     }
 
-    public void addPoints(int amount) {
-        this.points += amount;
+    public void incrementFishCaught() {
+        this.fishCaught++;
+    }
+
+    public UUID getUuid() {
+        return uuid;
     }
 }

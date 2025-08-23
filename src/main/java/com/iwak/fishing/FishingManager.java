@@ -1,7 +1,6 @@
 package com.iwak.fishing;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -21,29 +20,8 @@ public class FishingManager {
     // Player UUID -> PlayerStats
     private final Map<UUID, PlayerStats> stats = new HashMap<>();
 
-    // Config-based fish points
-    private final Map<Material, Integer> fishPoints = new HashMap<>();
-
     public FishingManager(FishingEventPlugin plugin) {
         this.plugin = plugin;
-        loadPoints();
-    }
-
-    public void loadPoints() {
-        fishPoints.clear();
-        for (String key : plugin.getConfig().getConfigurationSection("fish-points").getKeys(false)) {
-            try {
-                Material mat = Material.valueOf(key.toUpperCase());
-                int points = plugin.getConfig().getInt("fish-points." + key, 1);
-                fishPoints.put(mat, points);
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Invalid material in config: " + key);
-            }
-        }
-    }
-
-    public Optional<Integer> getPointsFor(Material mat) {
-        return Optional.ofNullable(fishPoints.get(mat));
     }
 
     public boolean isRunning() {
@@ -52,6 +30,14 @@ public class FishingManager {
 
     public void startEvent(int durationSeconds) {
         if (eventRunning) return;
+
+        int online = Bukkit.getOnlinePlayers().size();
+        int minPlayers = plugin.getConfig().getInt("minimum-players", 2);
+
+        if (online < minPlayers) {
+            Bukkit.broadcastMessage("§cNot enough players to start the Fishing Event! (Need at least " + minPlayers + ")");
+            return;
+        }
 
         eventRunning = true;
         remainingTime = durationSeconds;
@@ -93,7 +79,9 @@ public class FishingManager {
     }
 
     private void updateHologram() {
-        // If using DecentHolograms + PlaceholderAPI, nothing needed here.
+        // If using DecentHolograms command system, update here.
+        // Example with PlaceholderAPI: The placeholders will pull from getTopName() and getTopScore()
+        // No direct command calls here — keep it placeholder-driven
     }
 
     public void forceStop(boolean announceWinners) {
@@ -114,18 +102,26 @@ public class FishingManager {
         if (announceWinners) {
             Bukkit.broadcastMessage("§bFishing Event Ended!");
             List<PlayerStats> top = getTopPlayers(3);
+
             for (int i = 0; i < top.size(); i++) {
                 PlayerStats ps = top.get(i);
                 Bukkit.broadcastMessage("§6#" + (i + 1) + " §e" + ps.getName() +
                         " §7- Fish: §a" + ps.getFishCount() +
                         " §7Score: §a" + ps.getScore());
+
+                // Handle prizes if enabled
+                if (plugin.getConfig().getBoolean("enable-prizes", false)) {
+                    String cmd = plugin.getConfig().getString("prizes." + (i + 1));
+                    if (cmd != null && !cmd.isEmpty()) {
+                        String finalCmd = cmd.replace("{player}", ps.getName());
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCmd);
+
+                        Bukkit.broadcastMessage("§d#" + (i + 1) + " §a" + ps.getName() +
+                                " §7won prize: §b" + cmd.replace("{player}", ps.getName()));
+                    }
+                }
             }
         }
-    }
-
-    public void resetLeaderboard() {
-        stats.clear();
-        Bukkit.broadcastMessage("§cFishing Event leaderboard has been reset!");
     }
 
     public List<PlayerStats> getTopPlayers(int limit) {

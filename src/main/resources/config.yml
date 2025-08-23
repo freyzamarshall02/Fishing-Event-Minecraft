@@ -1,21 +1,23 @@
-# FishingEvent Config
+# Fishing Event Config
 
-# Minimum players required to start the event
+# Minimum number of players required to start the event
 minimum-players: 2
 
-# Scoring for each fish type
+# Enable or disable prize system
+enable-prizes: true
+
+# Prize commands for winners
+# Use %player% as placeholder for the winner's name
+# Commands run from console
+prizes:
+  1: "give %player% diamond 3"
+  2: "give %player% diamond 2"
+  3: "give %player% diamond 1"
+
+# Scoring system for fish types
+# You can adjust points per item caught
 fish-scores:
   COD: 1
   SALMON: 2
   TROPICAL_FISH: 3
   PUFFERFISH: 5
-
-# Enable or disable prizes for winners
-enable-prizes: true
-
-# Prize commands for winners
-# {player} will be replaced with the player's name
-prizes:
-  1: "give {player} diamond 3"
-  2: "give {player} gold_ingot 5"
-  3: "give {player} iron_ingot 10"

@@ -1,12 +1,13 @@
 package com.iwak.fishing;
 
-import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 
 public class FishListener implements Listener {
-
     private final FishingManager manager;
 
     public FishListener(FishingManager manager) {
@@ -16,10 +17,18 @@ public class FishListener implements Listener {
     @EventHandler
     public void onPlayerFish(PlayerFishEvent event) {
         if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
-            Material caught = event.getCaught().getType();
-            manager.addCatch(event.getPlayer(), caught);
-            event.getPlayer().sendMessage(Messages.get("fish-caught")
-                    .replace("%fish%", caught.name()));
+            Entity caught = event.getCaught();
+            if (caught != null) {
+                Player player = event.getPlayer();
+                EntityType type = caught.getType();
+
+                manager.addCatch(player.getUniqueId(), type);
+
+                int points = manager.getPointsFor(type);
+                if (points > 0) {
+                    player.sendMessage("§aYou caught a " + type.name() + "! +" + points + " points");
+                }
+            }
         }
     }
 }
